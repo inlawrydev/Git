@@ -9,13 +9,12 @@ import os
 import tempfile
 from datetime import datetime
 
-from obfuscator import AdvancedRobloxObfuscator, BytecodeObfuscator
+from obfuscator import AdvancedRobloxObfuscator
 from pastefy_uploader import PastefyUploader
 
 TOKEN = os.getenv('DISCORD_TOKEN')
 
 intents = discord.Intents.default()
-# intents.message_content = True  # Убрали, т.к. используем только slash-команды
 
 class ObfuscatorBot(commands.Bot):
     def __init__(self):
@@ -25,9 +24,8 @@ class ObfuscatorBot(commands.Bot):
             help_command=None
         )
         self.obf = AdvancedRobloxObfuscator()
-        self.bytecode_obf = BytecodeObfuscator()
         self.pastefy = PastefyUploader()
-        
+
     async def setup_hook(self):
         await self.tree.sync()
         print(f"Logged in as {self.user}")
@@ -50,11 +48,11 @@ async def on_ready():
 async def upload_to_pastefy(title: str, content: str) -> dict:
     return await bot.pastefy.upload_paste(title, content, "UNLISTED")
 
-def create_embed(paste_result: dict, level: str, original_size: int, obf_size: int) -> discord.Embed:
+def create_embed(paste_result: dict, original_size: int, obf_size: int) -> discord.Embed:
     if paste_result['success']:
         embed = discord.Embed(
             title="✅ Обфускация завершена!",
-            description=f"Уровень: `{level}`",
+            description="🛡️ Защита: **MAXIMUM**",
             color=0x00ff88,
             timestamp=datetime.now()
         )
@@ -67,119 +65,88 @@ def create_embed(paste_result: dict, level: str, original_size: int, obf_size: i
             color=0xffaa00,
             timestamp=datetime.now()
         )
-    
+
     embed.add_field(name="📦 Исходный", value=f"`{original_size}` байт", inline=True)
     embed.add_field(name="📦 Обфусцированный", value=f"`{obf_size}` байт", inline=True)
-    embed.add_field(name="🔐 Методы", value="XOR, Minify, Junk, Rename", inline=False)
+    embed.add_field(
+        name="🔐 Методы",
+        value="Multi-key XOR, Splitting, Rename, Minify, Junk, Numbers, Wrapper",
+        inline=False
+    )
+    embed.add_field(
+        name="⚙️ Совместимость",
+        value="`loadstring` · `game:HttpGet` · `syn.request` · `getgenv` · "
+              "`hookfunction` · `queue_on_teleport` · `Drawing` · 250+ executor API",
+        inline=False
+    )
     return embed
 
-@bot.tree.command(name="obfuscate", description="🔒 Обфусцировать Roblox-скрипт")
+@bot.tree.command(name="obfuscate", description="🔒 Обфусцировать Roblox-скрипт (MAX защита)")
 @app_commands.describe(
     code="Lua-код для обфускации",
-    level="Уровень защиты",
     title="Название пасты"
 )
-@app_commands.choices(level=[
-    app_commands.Choice(name="🔧 Light (переименование + minify)", value="light"),
-    app_commands.Choice(name="🔒 Medium (+ XOR-шифрование строк)", value="medium"),
-    app_commands.Choice(name="🛡️ Heavy (всё + junk code + числа)", value="heavy"),
-    app_commands.Choice(name="⚡ Bytecode (компиляция в байткод)", value="bytecode")
-])
 async def obfuscate(
     interaction: discord.Interaction,
     code: str,
-    level: str = "heavy",
     title: str = "Obfuscated Script"
 ):
     await interaction.response.defer(thinking=True)
-    
+
     original_size = len(code.encode('utf-8'))
-    
+
     try:
-        if level == "bytecode":
-            result = bot.bytecode_obf.obfuscate_bytecode(code)
-            if result['success']:
-                obfuscated = result['loader']
-            else:
-                # Fallback на heavy
-                obfuscated = bot.obf.obfuscate(code, "heavy")
-                level = "heavy (fallback из-за ошибки bytecode)"
-        else:
-            obfuscated = bot.obf.obfuscate(code, level)
-        
+        obfuscated = bot.obf.obfuscate(code)
         obf_size = len(obfuscated.encode('utf-8'))
-        
-        # Загружаем на Pastefy
+
         paste_result = await upload_to_pastefy(title, obfuscated)
-        
-        embed = create_embed(paste_result, level, original_size, obf_size)
-        
+        embed = create_embed(paste_result, original_size, obf_size)
+
         if not paste_result['success']:
-            # Отправляем файлом если Pastefy упал
-            with tempfile.NamedTemporaryFile(mode='w', suffix='.lua', delete=False) as f:
+            with tempfile.NamedTemporaryFile(mode='w', suffix='.lua', delete=False, encoding='utf-8') as f:
                 f.write(obfuscated)
                 fp = f.name
             await interaction.followup.send(embed=embed, file=discord.File(fp, "obfuscated.lua"))
             os.unlink(fp)
         else:
             await interaction.followup.send(embed=embed)
-            
+
     except Exception as e:
         await interaction.followup.send(f"❌ Ошибка: `{str(e)}`", ephemeral=True)
 
-@bot.tree.command(name="obfuscate_file", description="📁 Загрузить .lua файл")
-@app_commands.describe(
-    file="Файл .lua",
-    level="Уровень защиты"
-)
-@app_commands.choices(level=[
-    app_commands.Choice(name="🔧 Light", value="light"),
-    app_commands.Choice(name="🔒 Medium", value="medium"),
-    app_commands.Choice(name="🛡️ Heavy", value="heavy"),
-    app_commands.Choice(name="⚡ Bytecode", value="bytecode")
-])
+@bot.tree.command(name="obfuscate_file", description="📁 Загрузить .lua файл (MAX защита)")
+@app_commands.describe(file="Файл .lua")
 async def obfuscate_file(
     interaction: discord.Interaction,
-    file: discord.Attachment,
-    level: str = "heavy"
+    file: discord.Attachment
 ):
     if not file.filename.endswith('.lua'):
         await interaction.response.send_message("❌ Только `.lua`!", ephemeral=True)
         return
-    
+
     await interaction.response.defer(thinking=True)
-    
+
     try:
         content = await file.read()
         code = content.decode('utf-8')
         original_size = len(content)
-        
-        if level == "bytecode":
-            result = bot.bytecode_obf.obfuscate_bytecode(code)
-            if result['success']:
-                obfuscated = result['loader']
-            else:
-                obfuscated = bot.obf.obfuscate(code, "heavy")
-                level = "heavy (fallback)"
-        else:
-            obfuscated = bot.obf.obfuscate(code, level)
-        
+
+        obfuscated = bot.obf.obfuscate(code)
         obf_size = len(obfuscated.encode('utf-8'))
-        
+
         paste_result = await upload_to_pastefy(f"Obfuscated {file.filename}", obfuscated)
-        
-        embed = create_embed(paste_result, level, original_size, obf_size)
+        embed = create_embed(paste_result, original_size, obf_size)
         embed.set_footer(text=f"Файл: {file.filename}")
-        
+
         if not paste_result['success']:
-            with tempfile.NamedTemporaryFile(mode='w', suffix='.lua', delete=False) as f:
+            with tempfile.NamedTemporaryFile(mode='w', suffix='.lua', delete=False, encoding='utf-8') as f:
                 f.write(obfuscated)
                 fp = f.name
             await interaction.followup.send(embed=embed, file=discord.File(fp, f"obf_{file.filename}"))
             os.unlink(fp)
         else:
             await interaction.followup.send(embed=embed)
-            
+
     except Exception as e:
         await interaction.followup.send(f"❌ Ошибка: `{str(e)}`", ephemeral=True)
 
@@ -193,36 +160,32 @@ async def ping(interaction: discord.Interaction):
 async def help_cmd(interaction: discord.Interaction):
     embed = discord.Embed(
         title="🔒 IRY HUB OBF",
-        description="Продвинутый обфускатор Roblox-скриптов",
+        description="Продвинутый обфускатор Roblox-скриптов\n🛡️ Всегда **максимальный** уровень защиты",
         color=0x5865F2
     )
     embed.add_field(
         name="/obfuscate",
-        value="Обфусцировать код\n"
-              "`code` — Lua-код\n"
-              "`level` — light/medium/heavy/bytecode\n"
-              "`title` — название пасты",
+        value="Обфусцировать код\n`code` — Lua-код\n`title` — название пасты",
         inline=False
     )
     embed.add_field(
-        name="🔧 Light",
-        value="Переименование переменных + minification",
+        name="/obfuscate_file",
+        value="Обфусцировать `.lua` файл",
         inline=False
     )
     embed.add_field(
-        name="🔒 Medium",
-        value="+ XOR-шифрование строк",
+        name="🛡️ Методы защиты",
+        value="Multi-key XOR-шифрование строк · Разбиение строк на части · "
+              "Переименование переменных · Обфускация чисел · Junk-код · "
+              "Minification (весь код в одну строку)",
         inline=False
     )
     embed.add_field(
-        name="🛡️ Heavy",
-        value="+ Обфускация чисел + junk code + flattening\n"
-              "Весь код в **одну строку**!",
-        inline=False
-    )
-    embed.add_field(
-        name="⚡ Bytecode",
-        value="Компиляция в байткод LuaJIT + XOR-шифрование",
+        name="⚙️ Полная совместимость",
+        value="`loadstring(game:HttpGet())` · `syn.request` · `request` · `http_request` · "
+              "`getgenv` · `gethui` · `identifyexecutor` · `queue_on_teleport` · "
+              "`setclipboard` · `writefile` · `hookfunction` · `hookmetamethod` · "
+              "`Drawing` · `WebSocket` · `getrawmetatable` · `newcclosure` и др.",
         inline=False
     )
     await interaction.response.send_message(embed=embed)
