@@ -1,6 +1,3 @@
-"""
-IRY HUB OBF — Roblox Obfuscator Bot
-"""
 
 import discord
 from discord import app_commands
@@ -43,7 +40,7 @@ async def on_ready():
     await bot.change_presence(
         activity=discord.Activity(
             type=discord.ActivityType.watching,
-            name="Roblox scripts 🔒"
+            name="Roblox scripts рџ”’"
         )
     )
 
@@ -53,46 +50,46 @@ async def upload_to_pastefy(title: str, content: str) -> dict:
 def validate_code_size(code: str) -> int:
     size = len(code.encode('utf-8'))
     if size > MAX_INPUT_BYTES:
-        raise ValueError(f"Размер исходного файла превышает {MAX_INPUT_BYTES // 1024} KiB")
+        raise ValueError(f"Р Р°Р·РјРµСЂ РёСЃС…РѕРґРЅРѕРіРѕ С„Р°Р№Р»Р° РїСЂРµРІС‹С€Р°РµС‚ {MAX_INPUT_BYTES // 1024} KiB")
     return size
 
 def create_embed(paste_result: dict, original_size: int, obf_size: int) -> discord.Embed:
     if paste_result['success']:
         embed = discord.Embed(
-            title="✅ Обфускация завершена!",
-            description="🛡️ Защита: **MAXIMUM**",
+            title="вњ… РћР±С„СѓСЃРєР°С†РёСЏ Р·Р°РІРµСЂС€РµРЅР°!",
+            description="рџ›ЎпёЏ Р—Р°С‰РёС‚Р°: **MAXIMUM**",
             color=0x00ff88,
             timestamp=datetime.now()
         )
-        embed.add_field(name="🔗 Ссылка", value=f"[Pastefy]({paste_result['url']})", inline=False)
-        embed.add_field(name="📋 Raw", value=f"[Копировать]({paste_result['raw_url']})", inline=False)
+        embed.add_field(name="рџ”— РЎСЃС‹Р»РєР°", value=f"[Pastefy]({paste_result['url']})", inline=False)
+        embed.add_field(name="рџ“‹ Raw", value=f"[РљРѕРїРёСЂРѕРІР°С‚СЊ]({paste_result['raw_url']})", inline=False)
     else:
         embed = discord.Embed(
-            title="⚠️ Pastefy недоступен",
-            description=f"Ошибка: `{paste_result['error']}`",
+            title="вљ пёЏ Pastefy РЅРµРґРѕСЃС‚СѓРїРµРЅ",
+            description=f"РћС€РёР±РєР°: `{paste_result['error']}`",
             color=0xffaa00,
             timestamp=datetime.now()
         )
 
-    embed.add_field(name="📦 Исходный", value=f"`{original_size}` байт", inline=True)
-    embed.add_field(name="📦 Обфусцированный", value=f"`{obf_size}` байт", inline=True)
+    embed.add_field(name="рџ“¦ РСЃС…РѕРґРЅС‹Р№", value=f"`{original_size}` Р±Р°Р№С‚", inline=True)
+    embed.add_field(name="рџ“¦ РћР±С„СѓСЃС†РёСЂРѕРІР°РЅРЅС‹Р№", value=f"`{obf_size}` Р±Р°Р№С‚", inline=True)
     embed.add_field(
-        name="🔐 Методы",
+        name="рџ”ђ РњРµС‚РѕРґС‹",
         value="Multi-key XOR, Splitting, Rename, Minify, Junk, Numbers, Wrapper",
         inline=False
     )
     embed.add_field(
-        name="⚙️ Совместимость",
-        value="`loadstring` · `game:HttpGet` · `syn.request` · `getgenv` · "
-              "`hookfunction` · `queue_on_teleport` · `Drawing` · 250+ executor API",
+        name="вљ™пёЏ РЎРѕРІРјРµСЃС‚РёРјРѕСЃС‚СЊ",
+        value="`loadstring` В· `game:HttpGet` В· `syn.request` В· `getgenv` В· "
+              "`hookfunction` В· `queue_on_teleport` В· `Drawing` В· 250+ executor API",
         inline=False
     )
     return embed
 
-@bot.tree.command(name="obfuscate", description="🔒 Обфусцировать Roblox-скрипт (MAX защита)")
+@bot.tree.command(name="obfuscate", description="рџ”’ РћР±С„СѓСЃС†РёСЂРѕРІР°С‚СЊ Roblox-СЃРєСЂРёРїС‚ (MAX Р·Р°С‰РёС‚Р°)")
 @app_commands.describe(
-    code="Lua-код для обфускации",
-    title="Название пасты"
+    code="Lua-РєРѕРґ РґР»СЏ РѕР±С„СѓСЃРєР°С†РёРё",
+    title="РќР°Р·РІР°РЅРёРµ РїР°СЃС‚С‹"
 )
 async def obfuscate(
     interaction: discord.Interaction,
@@ -106,7 +103,7 @@ async def obfuscate(
         obfuscated = bot.obf.obfuscate(code)
         obf_size = len(obfuscated.encode('utf-8'))
         if obf_size > MAX_OUTPUT_BYTES:
-            raise ValueError("Результат слишком большой для отправки в Discord")
+            raise ValueError("Р РµР·СѓР»СЊС‚Р°С‚ СЃР»РёС€РєРѕРј Р±РѕР»СЊС€РѕР№ РґР»СЏ РѕС‚РїСЂР°РІРєРё РІ Discord")
 
         paste_result = await upload_to_pastefy(title, obfuscated)
         embed = create_embed(paste_result, original_size, obf_size)
@@ -123,16 +120,16 @@ async def obfuscate(
             await interaction.followup.send(embed=embed)
 
     except Exception as e:
-        await interaction.followup.send(f"❌ Ошибка: `{str(e)}`", ephemeral=True)
+        await interaction.followup.send(f"вќЊ РћС€РёР±РєР°: `{str(e)}`", ephemeral=True)
 
-@bot.tree.command(name="obfuscate_file", description="📁 Загрузить .lua файл (MAX защита)")
-@app_commands.describe(file="Файл .lua")
+@bot.tree.command(name="obfuscate_file", description="рџ“Ѓ Р—Р°РіСЂСѓР·РёС‚СЊ .lua С„Р°Р№Р» (MAX Р·Р°С‰РёС‚Р°)")
+@app_commands.describe(file="Р¤Р°Р№Р» .lua")
 async def obfuscate_file(
     interaction: discord.Interaction,
     file: discord.Attachment
 ):
     if not file.filename.endswith('.lua'):
-        await interaction.response.send_message("❌ Только `.lua`!", ephemeral=True)
+        await interaction.response.send_message("вќЊ РўРѕР»СЊРєРѕ `.lua`!", ephemeral=True)
         return
 
     await interaction.response.defer(thinking=True)
@@ -145,11 +142,11 @@ async def obfuscate_file(
         obfuscated = bot.obf.obfuscate(code)
         obf_size = len(obfuscated.encode('utf-8'))
         if obf_size > MAX_OUTPUT_BYTES:
-            raise ValueError("Результат слишком большой для отправки в Discord")
+            raise ValueError("Р РµР·СѓР»СЊС‚Р°С‚ СЃР»РёС€РєРѕРј Р±РѕР»СЊС€РѕР№ РґР»СЏ РѕС‚РїСЂР°РІРєРё РІ Discord")
 
         paste_result = await upload_to_pastefy(f"Obfuscated {file.filename}", obfuscated)
         embed = create_embed(paste_result, original_size, obf_size)
-        embed.set_footer(text=f"Файл: {file.filename}")
+        embed.set_footer(text=f"Р¤Р°Р№Р»: {file.filename}")
 
         if not paste_result['success']:
             with tempfile.NamedTemporaryFile(mode='w', suffix='.lua', delete=False, encoding='utf-8') as f:
@@ -163,50 +160,50 @@ async def obfuscate_file(
             await interaction.followup.send(embed=embed)
 
     except Exception as e:
-        await interaction.followup.send(f"❌ Ошибка: `{str(e)}`", ephemeral=True)
+        await interaction.followup.send(f"вќЊ РћС€РёР±РєР°: `{str(e)}`", ephemeral=True)
 
-@bot.tree.command(name="ping", description="🏓 Проверка")
+@bot.tree.command(name="ping", description="рџЏ“ РџСЂРѕРІРµСЂРєР°")
 async def ping(interaction: discord.Interaction):
     latency = round(bot.latency * 1000)
-    embed = discord.Embed(title="🏓 Pong!", description=f"`{latency}ms`", color=0x00ff00)
+    embed = discord.Embed(title="рџЏ“ Pong!", description=f"`{latency}ms`", color=0x00ff00)
     await interaction.response.send_message(embed=embed)
 
-@bot.tree.command(name="help", description="📖 Справка")
+@bot.tree.command(name="help", description="рџ“– РЎРїСЂР°РІРєР°")
 async def help_cmd(interaction: discord.Interaction):
     embed = discord.Embed(
-        title="🔒 IRY HUB OBF",
-        description="Продвинутый обфускатор Roblox-скриптов\n🛡️ Всегда **максимальный** уровень защиты",
+        title="рџ”’ IRY HUB OBF",
+        description="РџСЂРѕРґРІРёРЅСѓС‚С‹Р№ РѕР±С„СѓСЃРєР°С‚РѕСЂ Roblox-СЃРєСЂРёРїС‚РѕРІ\nрџ›ЎпёЏ Р РµР¶РёРј СЃ РїСЂРёРѕСЂРёС‚РµС‚РѕРј СЃРѕРІРјРµСЃС‚РёРјРѕСЃС‚Рё",
         color=0x5865F2
     )
     embed.add_field(
         name="/obfuscate",
-        value="Обфусцировать код\n`code` — Lua-код\n`title` — название пасты",
+        value="РћР±С„СѓСЃС†РёСЂРѕРІР°С‚СЊ РєРѕРґ\n`code` вЂ” Lua-РєРѕРґ\n`title` вЂ” РЅР°Р·РІР°РЅРёРµ РїР°СЃС‚С‹",
         inline=False
     )
     embed.add_field(
         name="/obfuscate_file",
-        value="Обфусцировать `.lua` файл",
+        value="РћР±С„СѓСЃС†РёСЂРѕРІР°С‚СЊ `.lua` С„Р°Р№Р»",
         inline=False
     )
     embed.add_field(
-        name="🛡️ Методы защиты",
-        value="Multi-key XOR-шифрование строк · Разбиение строк на части · "
-              "Переименование переменных · Обфускация чисел · Junk-код · "
-              "Minification (весь код в одну строку)",
+        name="рџ›ЎпёЏ РњРµС‚РѕРґС‹ Р·Р°С‰РёС‚С‹",
+        value="Multi-key XOR-С€РёС„СЂРѕРІР°РЅРёРµ СЃС‚СЂРѕРє В· Р Р°Р·Р±РёРµРЅРёРµ СЃС‚СЂРѕРє РЅР° С‡Р°СЃС‚Рё В· "
+              "РџРµСЂРµРёРјРµРЅРѕРІР°РЅРёРµ РїРµСЂРµРјРµРЅРЅС‹С… В· РћР±С„СѓСЃРєР°С†РёСЏ С‡РёСЃРµР» В· Junk-РєРѕРґ В· "
+              "Minification (РІРµСЃСЊ РєРѕРґ РІ РѕРґРЅСѓ СЃС‚СЂРѕРєСѓ)",
         inline=False
     )
     embed.add_field(
-        name="⚙️ Полная совместимость",
-        value="`loadstring(game:HttpGet())` · `syn.request` · `request` · `http_request` · "
-              "`getgenv` · `gethui` · `identifyexecutor` · `queue_on_teleport` · "
-              "`setclipboard` · `writefile` · `hookfunction` · `hookmetamethod` · "
-              "`Drawing` · `WebSocket` · `getrawmetatable` · `newcclosure` и др.",
+        name="вљ™пёЏ РџРѕР»РЅР°СЏ СЃРѕРІРјРµСЃС‚РёРјРѕСЃС‚СЊ",
+        value="`loadstring(game:HttpGet())` В· `syn.request` В· `request` В· `http_request` В· "
+              "`getgenv` В· `gethui` В· `identifyexecutor` В· `queue_on_teleport` В· "
+              "`setclipboard` В· `writefile` В· `hookfunction` В· `hookmetamethod` В· "
+              "`Drawing` В· `WebSocket` В· `getrawmetatable` В· `newcclosure` Рё РґСЂ.",
         inline=False
     )
     await interaction.response.send_message(embed=embed)
 
 if __name__ == "__main__":
     if not TOKEN:
-        print("❌ Укажите DISCORD_TOKEN!")
+        print("вќЊ РЈРєР°Р¶РёС‚Рµ DISCORD_TOKEN!")
         exit(1)
     bot.run(TOKEN)
