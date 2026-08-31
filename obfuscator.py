@@ -278,6 +278,7 @@ class AdvancedRobloxObfuscator:
         pattern = re.compile(re.escape(tag) + r'(\d+)' + re.escape(tag))
 
         def repl(m):
+            raw = m.group(0)
             try:
                 raw = strings[int(m.group(1))]
                 if raw.startswith('"') or raw.startswith("'"):
@@ -460,7 +461,8 @@ class AdvancedRobloxObfuscator:
             masked = self._unmask(masked, strings, tag)
             dec = self._generate_name('v')
 
-        # 4. Junk code + обёртка (с прокидыванием varargs)
+        # 4. Junk code + обёртка. The outer chunk is not a vararg function,
+        # so forwarding `...` here would make the generated Lua invalid.
         junk_before = self._generate_junk_code(random.randint(4, 8))
         junk_after = self._generate_junk_code(random.randint(2, 6))
         wrapper = self._generate_name('w')
@@ -473,8 +475,8 @@ class AdvancedRobloxObfuscator:
             '(function()\n'
             + decoder + '\n'
             + junk_before + '\n'
-            + 'local ' + wrapper + '=function(...)\n' + masked + '\nend\n'
-            + wrapper + '(...)\n'
+            + 'local ' + wrapper + '=function(...)\n' + masked + '\nend;\n'
+            + wrapper + '()\n'
             + junk_after + '\n'
             + 'end)()'
         )
