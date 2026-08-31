@@ -448,11 +448,10 @@ class AdvancedRobloxObfuscator:
         # 1. Маскировка строк + удаление комментариев
         masked, strings, tag = self._mask_strings(code)
 
-        # 2. Переименование переменных (безопасное)
-        try:
-            masked = self._rename_variables(masked)
-        except Exception:
-            pass
+        # 2. Do not rename identifiers with regexes. Lua/Luau scope resolution
+        # is lexical, and a regex cannot distinguish a local from an executor
+        # API or a callback name. Keeping identifiers is required for runtime
+        # correctness; strings, numbers and junk still provide obfuscation.
 
         # 3. XOR-шифрование строк (multi-key + splitting)
         try:
@@ -466,9 +465,14 @@ class AdvancedRobloxObfuscator:
         junk_before = self._generate_junk_code(random.randint(4, 8))
         junk_after = self._generate_junk_code(random.randint(2, 6))
         wrapper = self._generate_name('w')
+        # Implement XOR locally. Some executor environments do not expose
+        # `bit32`, which previously caused a nil-call before user code ran.
         decoder = (
+            'local bx=function(a,b)local r,p=0,1 while a>0 or b>0 do '
+            'local x=a%%2 local y=b%%2 if x~=y then r=r+p end '
+            'a=(a-x)/2 b=(b-y)/2 p=p*2 end return r end '
             'local %s=function(s,k)local t={}for i=1,#s do '
-            't[i]=string.char(bit32.bxor(string.byte(s,i),k))end '
+            't[i]=string.char(bx(string.byte(s,i),k))end '
             'return table.concat(t)end' % dec
         )
         full = (
