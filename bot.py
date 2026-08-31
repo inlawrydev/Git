@@ -86,7 +86,7 @@ def create_embed(paste_result: dict, original_size: int, obf_size: int) -> disco
     )
     return embed
 
-@bot.tree.command(name="obfuscate", description="Obfuscate a Roblox script (safe mode)")
+@bot.tree.command(name="obfcode", description="Obfuscate a Roblox script (safe mode)")
 @app_commands.describe(
     code="Lua code to obfuscate",
     title="Paste title"
@@ -122,7 +122,7 @@ async def obfuscate(
     except Exception as e:
         await interaction.followup.send(f"Error: `{str(e)}`", ephemeral=True)
 
-@bot.tree.command(name="obfuscate_file", description="Upload a .lua file (safe mode)")
+@bot.tree.command(name="obf", description="Upload a .lua file (safe mode)")
 @app_commands.describe(file="Lua file")
 async def obfuscate_file(
     interaction: discord.Interaction,
