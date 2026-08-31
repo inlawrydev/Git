@@ -417,4 +417,4 @@ class AdvancedRobloxObfuscator:
         except Exception:
             full = re.sub(r'\s*\n\s*', ' ', full).strip()
 
-        return '--[[ IRY HUB OBF | Protection: SAFE ]] ' + full
+        return '--[[ IRY HUB OBF | DS https://discord.gg/N3KCdD7Yn ]] ' + full
