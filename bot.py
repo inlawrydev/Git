@@ -13,6 +13,8 @@ from obfuscator import AdvancedRobloxObfuscator
 from pastefy_uploader import PastefyUploader
 
 TOKEN = os.getenv('DISCORD_TOKEN')
+MAX_INPUT_BYTES = 512 * 1024
+MAX_OUTPUT_BYTES = 8 * 1024 * 1024
 
 intents = discord.Intents.default()
 
@@ -47,6 +49,12 @@ async def on_ready():
 
 async def upload_to_pastefy(title: str, content: str) -> dict:
     return await bot.pastefy.upload_paste(title, content, "UNLISTED")
+
+def validate_code_size(code: str) -> int:
+    size = len(code.encode('utf-8'))
+    if size > MAX_INPUT_BYTES:
+        raise ValueError(f"Размер исходного файла превышает {MAX_INPUT_BYTES // 1024} KiB")
+    return size
 
 def create_embed(paste_result: dict, original_size: int, obf_size: int) -> discord.Embed:
     if paste_result['success']:
@@ -93,11 +101,12 @@ async def obfuscate(
 ):
     await interaction.response.defer(thinking=True)
 
-    original_size = len(code.encode('utf-8'))
-
     try:
+        original_size = validate_code_size(code)
         obfuscated = bot.obf.obfuscate(code)
         obf_size = len(obfuscated.encode('utf-8'))
+        if obf_size > MAX_OUTPUT_BYTES:
+            raise ValueError("Результат слишком большой для отправки в Discord")
 
         paste_result = await upload_to_pastefy(title, obfuscated)
         embed = create_embed(paste_result, original_size, obf_size)
@@ -106,8 +115,10 @@ async def obfuscate(
             with tempfile.NamedTemporaryFile(mode='w', suffix='.lua', delete=False, encoding='utf-8') as f:
                 f.write(obfuscated)
                 fp = f.name
-            await interaction.followup.send(embed=embed, file=discord.File(fp, "obfuscated.lua"))
-            os.unlink(fp)
+            try:
+                await interaction.followup.send(embed=embed, file=discord.File(fp, "obfuscated.lua"))
+            finally:
+                os.unlink(fp)
         else:
             await interaction.followup.send(embed=embed)
 
@@ -129,10 +140,12 @@ async def obfuscate_file(
     try:
         content = await file.read()
         code = content.decode('utf-8')
-        original_size = len(content)
+        original_size = validate_code_size(code)
 
         obfuscated = bot.obf.obfuscate(code)
         obf_size = len(obfuscated.encode('utf-8'))
+        if obf_size > MAX_OUTPUT_BYTES:
+            raise ValueError("Результат слишком большой для отправки в Discord")
 
         paste_result = await upload_to_pastefy(f"Obfuscated {file.filename}", obfuscated)
         embed = create_embed(paste_result, original_size, obf_size)
@@ -142,8 +155,10 @@ async def obfuscate_file(
             with tempfile.NamedTemporaryFile(mode='w', suffix='.lua', delete=False, encoding='utf-8') as f:
                 f.write(obfuscated)
                 fp = f.name
-            await interaction.followup.send(embed=embed, file=discord.File(fp, f"obf_{file.filename}"))
-            os.unlink(fp)
+            try:
+                await interaction.followup.send(embed=embed, file=discord.File(fp, f"obf_{file.filename}"))
+            finally:
+                os.unlink(fp)
         else:
             await interaction.followup.send(embed=embed)
 
