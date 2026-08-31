@@ -176,12 +176,12 @@ async def help_cmd(interaction: discord.Interaction):
         color=0x5865F2
     )
     embed.add_field(
-        name="/obfuscate",
+        name="/obfcode",
         value="Obfuscate Lua code\n`code` - Lua source\n`title` - paste title",
         inline=False
     )
     embed.add_field(
-        name="/obfuscate_file",
+        name="/obf",
         value="Obfuscate an attached `.lua` file",
         inline=False
     )
